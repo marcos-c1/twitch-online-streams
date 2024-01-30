@@ -8,7 +8,6 @@ def get_client_secret():
     with open(path.expanduser('~/.secret'), "r") as f:
         client_id = f.readline()[:-1]
         client_secret = f.readline()[:-1]        
-
     f.close()
     return client_id, client_secret 
 
