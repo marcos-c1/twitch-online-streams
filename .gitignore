@@ -1,2 +1,3 @@
 build.sh
 token
+__pycache__/
