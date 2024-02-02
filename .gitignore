@@ -1,3 +1,11 @@
 build.sh
-token
+user_token
 __pycache__/
+
+# Secrets 
+.twitch-client-id
+.twitch-client-secret
+
+# Added by cargo
+
+/target
