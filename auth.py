@@ -17,7 +17,58 @@ class Token():
                                                                                                     
         if not self.user_token:
             return
-                                                                                                    
+
+    def is_valid_token(self):
+        url = 'https://id.twitch.tv/oauth2/validate'
+        """
+            Example of request
+            curl -X GET 'https://id.twitch.tv/oauth2/validate' \
+            -H 'Authorization: OAuth <access token to validate goes here>'
+            
+        """
+        headers = {
+            'Authorization': f'OAuth {self.user_token}'
+        }
+        response = requests.get(url, headers=headers)
+        
+        """
+            Example of response
+            {
+              "client_id": "wbmytr93xzw8zbg0p1izqyzzc5mbiz",
+              "login": "twitchdev",
+              "scopes": [
+                "channel:read:subscriptions"
+              ],
+              "user_id": "141981764",
+              "expires_in": 5520838
+            }
+
+        """
+        print(response)
+        match response.status_code:
+            case 200:
+                try:
+                    return True 
+                except e:
+                    raise Exception(e)
+                finally:
+                    return response
+            case 401:
+                """ 
+                    STATUS 401 INVALID_TOKEN 
+                    {
+                      "status": 401,
+                      "message": "invalid access token"
+                    }
+                """
+                return False
+            case 500:
+                raise Exception("Server error.") 
+            case _:
+                raise Exception(f"{response.status_code}: {response.content}")
+                                                                                            
+        return false
+
     # TODO: Save scope aswell in future. 
     def save_user_token(self, token: str, refresh_token: str, expires_in: int):
         self.user_token = token

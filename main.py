@@ -2,4 +2,5 @@ from twitch import TwitchAPI
 
 if __name__ == "__main__":
     api = TwitchAPI()
-    api.get_users_id('rvlt1')
+    #api.validate_token()
+    api.get_followed_channels_live('rvlt1')
