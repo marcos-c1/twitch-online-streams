@@ -1,6 +1,32 @@
 from os import path
 import requests
 
+class Token():
+    def __init__(self):
+        self.path = './user_token'
+        self.user_token = ""
+        self.refresh_token = ""
+        self.expires_in = 0
+
+    def set_user_token(self):
+        if(path.exists(self.path)):
+            with open(path.expanduser(self.path), "r") as f:
+                self.user_token = f.readline()[:-1]
+                self.refresh_token = f.readline()[:-1]
+                self.expires_in = f.readline()[:-1]
+                                                                                                    
+        if not self.user_token:
+            return
+                                                                                                    
+    # TODO: Save scope aswell in future. 
+    def save_user_token(self, token: str, refresh_token: str, expires_in: int):
+        self.user_token = token
+        self.refresh_token = refresh_token 
+        self.expires_in = expires_in 
+        with open(path.expanduser(self.path), "w") as f:
+            f.write(f"{token}\n{refresh_token}\n{str(expires_in)}\n")
+        f.close()
+
 class Secret():
     def __init__(self, path_id=".twitch-client-id", path_secret=".twitch-client-secret"):
         self.path_id = path_id
@@ -24,32 +50,22 @@ class Secret():
                                                                      
 class OAuth():
     def __init__(self):
-        secret = Secret()
-        self.__client_id = secret._get_client_id()
-        self.__client_secret = secret._get_client_secret()
+        self.__token = Token()
+        self.__token.set_user_token()
+        self.__client_id = Secret()._get_client_id()
+        self.__client_secret = Secret()._get_client_secret()
+
+    def _get_token(self):
+        return self.__token 
+
+    def _set_token(self, token: Token):
+        self.__token = token
 
     def _get_client_id(self):
         return self.__client_id
 
     def _get_client_secret(self):
         return self.__client_secret
-
-    def get_user_token():
-        access_token = ""
-        if(path.exists('./user_token')):
-            with open(path.expanduser('./user_token'), "r") as f:
-                user_token = f.readline()[:-1]
-                refresh_token = f.readline()[:-1]
-                expires_in = f.readline()[:-1]
-
-        if not user_token:
-            raise Exception("There isnt a user token saved. Please authorize your twitch account.")
-        return user_token, refresh_token, expires_in 
-
-    def save_user_token(token: str, refresh_token: str, expires_in: int):
-        with open(path.expanduser('./user_token'), "w") as f:
-            f.write(f"{token}\n{refresh_token}\n{str(expires_in)}\n")
-        f.close()
 
     def set_code(self, code):
         self.code = code
@@ -104,10 +120,12 @@ class OAuth():
                 try:
                     data = response.json()
                     print(data)
-                    self.access_token = data['access_token']
-                    self.refresh_token = data['refresh_token']
-                    self.expires_in = data['expires_in']
-                    save_user_token(self.access_token, self.refresh_token, self.expires_in)
+                    token = Token()
+                    token.user_token = data['access_token']
+                    token.refresh_token = data['refresh_token']
+                    token.expires_in = data['expires_in']
+                    self._set_token(token)
+                    self._get_token().save_user_token(token.user_token, token.refresh_token, token.expires_in)
                 except e:
                     raise Exception(e)
                 finally:

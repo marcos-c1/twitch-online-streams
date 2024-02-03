@@ -1,5 +1,5 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from utils import OAuth, Secret 
+from auth import OAuth, Secret 
 import re
 
 class Server(BaseHTTPRequestHandler):
@@ -27,12 +27,18 @@ def create_server():
     hostname = "localhost"
     port = 3000
     server = HTTPServer((hostname, port), Server)
-    print("Server started: http://%s:%s" % (hostname, port))
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        pass
-    server.server_close()
-    print("Closing server connection")
+    oauth = OAuth()
+    user_token = oauth._get_token().user_token
+    if(user_token):
+        print(f"Token founded! {user_token}\n")
+    else:
+        print("Please authenticate to get user token access.")
+        print("Server started: http://%s:%s" % (hostname, port))
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            pass
+        server.server_close()
+        print("Closing server connection")
 
 create_server()
