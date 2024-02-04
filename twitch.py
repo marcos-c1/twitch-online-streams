@@ -1,5 +1,6 @@
 from auth import Secret, Token 
-from models.user import User
+from models.user import User 
+from models.channel import Channel
 import requests
 
 # https://dev.twitch.tv/docs/api/reference/
@@ -69,7 +70,7 @@ class TwitchAPI():
                     payload = data['data'][0]
                     user = User(payload)
                     self.user = user
-                except e:
+                except Exception as e:
                     raise Exception(e)
                 finally:
                     return response
@@ -102,17 +103,50 @@ class TwitchAPI():
         }
 
         response = requests.get(url, headers=headers)
-        token = self.token
-        
+        """
+            Example of response
+            {
+              "data": [
+                {
+                  "id": "42170724654",
+                  "user_id": "132954738",
+                  "user_login": "aws",
+                  "user_name": "AWS",
+                  "game_id": "417752",
+                  "game_name": "Talk Shows & Podcasts",
+                  "type": "live",
+                  "title": "AWS Howdy Partner! Y'all welcome ExtraHop to the show!",
+                  "viewer_count": 20,
+                  "started_at": "2021-03-31T20:57:26Z",
+                  "language": "en",
+                  "thumbnail_url": "https://static-cdn.jtvnw.net/previews-ttv/live_user_aws-{width}x{height}.jpg",
+                  "tag_ids": [],
+                  "tags": ["English"]
+                },
+                ...
+              ],
+              "pagination": {
+                "cursor": "eyJiIjp7IkN1cnNvciI6ImV5SnpJam8zT0RNMk5TNDBORFF4TlRjMU1UY3hOU3dpWkNJNlptRnNjMlVzSW5RaU9uUnlkV1Y5In0sImEiOnsiQ3Vyc29yIjoiZXlKeklqb3hOVGs0TkM0MU56RXhNekExTVRZNU1ESXNJbVFpT21aaGJITmxMQ0owSWpwMGNuVmxmUT09In19"
+              }
+            }
+
+        """
+        token = self.token 
         match response.status_code:
             case 200:
                 try:
-                    data = response.json()
-                    print(data)
-                except e:
+                    channels = response.json()['data']
+                    for i in range(len(channels)):
+                        ch = Channel(channels[i])
+                        print(f'{ch.user_name}')
+                        print(f'{ch.title}')
+                        print(f'{ch.game_name}')
+                        print(f'{ch.viewer_count}')
+                        print(f'{ch.started_at}')
+                        print(f'{ch.language}')
+                        print()
+                except Exception as e:
                     raise Exception(e)
-                finally:
-                    return response
             case 401:
                 """
                     401: Unauthorized
