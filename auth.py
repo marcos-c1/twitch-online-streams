@@ -1,6 +1,27 @@
 from os import path
 import requests
 
+class Secret():
+    def __init__(self, path_id=".twitch-client-id", path_secret=".twitch-client-secret"):
+        self.path_id = path_id
+        self.path_secret = path_secret
+        self.client_id = ""
+        self.client_secret = ""
+
+    def _get_client_id(self):
+        if not self.client_id:
+            with open(path.expanduser('.twitch-client-id'), "r") as f:
+                self.client_id = f.readline()[:-1]
+            f.close()
+        return self.client_id 
+                                                                         
+    def _get_client_secret(self):
+        if not self.client_secret: 
+            with open(path.expanduser('.twitch-client-secret'), "r") as f:
+                self.client_secret = f.readline()[:-1]        
+            f.close()
+        return self.client_secret 
+
 class Token():
     def __init__(self):
         self.path = './user_token'
@@ -69,8 +90,71 @@ class Token():
                                                                                             
         return false
 
+    def refresh_user_token(self):
+        print('Refreshing token..')
+        url = 'https://id.twitch.tv/oauth2/token'
+        refresh_token = self.refresh_token
+        client_id = Secret()._get_client_id()
+        client_secret = Secret()._get_client_secret()
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+        data = {
+            'grant_type': 'refresh_token',
+            'refresh_token': f'{refresh_token}',
+            'client_id': f'{client_id}',
+            'client_secret': f'{client_secret}'
+        }
+        """
+            Example of request
+            curl -X POST https://id.twitch.tv/oauth2/token \
+            -H 'Content-Type: application/x-www-form-urlencoded' \
+            -d 'grant_type=refresh_token&refresh_token=gdw3k62zpqi0kw01escg7zgbdhtxi6hm0155tiwcztxczkx17&client_id=<your client id goes here>&client_secret=<your client secret goes here>'
+        """
+        response = requests.post(url, headers=headers, data=data)
+        print(response)
+        """
+            Example of response
+            {
+              "access_token": "1ssjqsqfy6bads1ws7m03gras79zfr",
+              "refresh_token": "eyJfMzUtNDU0OC4MWYwLTQ5MDY5ODY4NGNlMSJ9%asdfasdf=",
+              "scope": [
+                "channel:read:subscriptions",
+                "channel:manage:polls"
+              ],
+              "token_type": "bearer"
+            }
+
+        """
+        match response.status_code:
+            case 200:
+                try:
+                    payload = response.json() 
+                    access_token = payload['access_token']
+                    refresh_token = payload['refresh_token']
+                    # TODO: Save payload['scope'] aswell
+                    self.save_user_token(access_token, refresh_token, 0)
+                except e:
+                    raise Exception(e)
+                finally:
+                    return response
+            case 401:
+                """ 
+                    STATUS 401 INVALID_TOKEN 
+                    {
+                      "status": 401,
+                      "message": "invalid access token"
+                    }
+                """
+                raise Exception ("Invalid token. Possible expired")
+            case 500:
+                raise Exception("Server error.") 
+            case _:
+                raise Exception(f"{response.status_code}: {response.content}")
+
     # TODO: Save scope aswell in future. 
     def save_user_token(self, token: str, refresh_token: str, expires_in: int):
+        print('Saving token..')
         self.user_token = token
         self.refresh_token = refresh_token 
         self.expires_in = expires_in 
@@ -78,26 +162,6 @@ class Token():
             f.write(f"{token}\n{refresh_token}\n{str(expires_in)}\n")
         f.close()
 
-class Secret():
-    def __init__(self, path_id=".twitch-client-id", path_secret=".twitch-client-secret"):
-        self.path_id = path_id
-        self.path_secret = path_secret
-        self.client_id = ""
-        self.client_secret = ""
-
-    def _get_client_id(self):
-        if not self.client_id:
-            with open(path.expanduser('.twitch-client-id'), "r") as f:
-                self.client_id = f.readline()[:-1]
-            f.close()
-        return self.client_id 
-                                                                         
-    def _get_client_secret(self):
-        if not self.client_secret: 
-            with open(path.expanduser('.twitch-client-secret'), "r") as f:
-                self.client_secret = f.readline()[:-1]        
-            f.close()
-        return self.client_secret 
                                                                      
 class OAuth():
     def __init__(self):

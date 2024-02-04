@@ -1,5 +1,5 @@
 from auth import Secret, Token 
-from models import user
+from models.user import User
 import requests
 
 # https://dev.twitch.tv/docs/api/reference/
@@ -8,7 +8,10 @@ class TwitchAPI():
         Attributes:
             root_url: The root path to call all other endpoints in api
             client_id: The client id itself established
-            token: The Token class object 
+            token: The Token class object contain:
+                user_token: Auth token returned by api in auth flow method
+                refresh_token: Refresh token returned by api in case that user token expires
+                expires_in: Remaining time to user token expires
     """
     def __init__(self):
         self.root_url = 'https://api.twitch.tv/helix/'
@@ -24,7 +27,7 @@ class TwitchAPI():
         
     # GET https://api.twitch.tv/helix/users?login=<username>
     # GET 'https://api.twitch.tv/helix/users?id=141981764'
-    def get_users(self, login: str):
+    def get_user(self, login: str):
         url = self.root_url + f'users?login={login}'
         
         """
@@ -58,6 +61,7 @@ class TwitchAPI():
             ]}
 
         """
+        token = self.token
         match response.status_code:
             case 200:
                 try:
@@ -70,18 +74,18 @@ class TwitchAPI():
                 finally:
                     return response
             case 401:
-                raise Exception("Token expired.")
+                token.refresh_user_token()
             case 500:
                 raise Exception("Server error.") 
             case _:
                 raise Exception(f"{response.status_code}: {response.content}")
-                print(response)
+        return None
 
     def get_followed_channels_live(self, login: str):
         client_id = self.client_id
         user = self.user
         if not user:
-            self.get_users(login)
+            self.get_user(login)
 
         url = self.root_url + 'streams/followed' + f'?user_id={self.user.id}'
         
@@ -96,11 +100,9 @@ class TwitchAPI():
             'Authorization': f'Bearer {self.token.user_token}',
             'Client-Id': client_id 
         }
-        params = {
-                'user_id': client_id 
-        }
 
-        response = requests.get(url, params)
+        response = requests.get(url, headers=headers)
+        token = self.token
         
         match response.status_code:
             case 200:
@@ -112,9 +114,18 @@ class TwitchAPI():
                 finally:
                     return response
             case 401:
-                # TODO: Generate another access token and store.
-                print(response.json())
-                raise Exception("Token expired.")
+                """
+                    401: Unauthorized
+
+                    1. The ID in user_id must match the user ID found in the access token.
+                    2. The Authorization header is required and must contain a user access token.
+                    3. The user access token must include the user:read:follows scope.
+                    4. The OAuth token is not valid.
+                    5. The client ID specified in the Client-Id header does not match the client ID specified in the access token.
+
+                """
+                print(f"{response.status_code}: {response.content}")
+                token.refresh_user_token()
             case 500:
                 raise Exception("Server error.") 
             case _:
