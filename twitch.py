@@ -1,6 +1,7 @@
 from auth import Secret, Token 
 from models.user import User 
 from models.channel import Channel
+from controllers.user_controller import UserController
 import requests
 
 # https://dev.twitch.tv/docs/api/reference/
@@ -66,14 +67,15 @@ class TwitchAPI():
         match response.status_code:
             case 200:
                 try:
-                    data = response.json()
-                    payload = data['data'][0]
+                    data = response.json()['data'][0]
+                    """
                     user = User(payload)
                     self.user = user
+                    """
                 except Exception as e:
                     raise Exception(e)
                 finally:
-                    return response
+                    return response.json()['data'][0]
             case 401:
                 token.refresh_user_token()
             case 500:
@@ -84,11 +86,10 @@ class TwitchAPI():
 
     def get_followed_channels_live(self, login: str):
         client_id = self.client_id
-        user = self.user
-        if not user:
-            self.get_user(login)
+        user_controller = UserController()
+        user = user_controller.get_user(login)
 
-        url = self.root_url + 'streams/followed' + f'?user_id={self.user.id}'
+        url = self.root_url + 'streams/followed' + f'?user_id={user.id}'
         
         """
             Example of request
@@ -136,6 +137,7 @@ class TwitchAPI():
             case 200:
                 try:
                     channels = response.json()['data']
+                    """
                     for i in range(len(channels)):
                         ch = Channel(channels[i])
                         print(f'{ch.user_name}')
@@ -145,8 +147,11 @@ class TwitchAPI():
                         print(f'{ch.started_at}')
                         print(f'{ch.language}')
                         print()
+                    """
                 except Exception as e:
                     raise Exception(e)
+                finally:
+                    return response.json()['data']
             case 401:
                 """
                     401: Unauthorized

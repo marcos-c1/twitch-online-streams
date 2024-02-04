@@ -1,8 +1,8 @@
-from twitch import TwitchAPI
 from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer
+from controllers.channel_controller import ChannelController 
 
-
+# https://textual.textualize.io/
 class StopwatchApp(App):
     """A Textual app to manage stopwatches."""
 
@@ -19,8 +19,18 @@ class StopwatchApp(App):
 
 
 if __name__ == "__main__":
-    app = StopwatchApp()
-    app.run()
-    api = TwitchAPI()
+    #app = StopwatchApp()
+    #app.run()
+    ch_controller = ChannelController()
+    channels = ch_controller.get_followed_channels('rvlt1')
+    
+    for ch in channels:
+        print(f'{ch.user_name}')
+        print(f'{ch.title}')
+        print(f'{ch.game_name}')
+        print(f'{ch.viewer_count}')
+        print(f'{ch.started_at}')
+        print(f'{ch.language}')
+        print()
+
     #api.validate_token()
-    #api.get_followed_channels_live('rvlt1')
