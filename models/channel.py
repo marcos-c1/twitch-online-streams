@@ -15,5 +15,9 @@ class Channel:
         self.tag_ids = payload['tag_ids']
         self.tags = payload['tags']
         self.is_mature = payload['is_mature']
+        self.payload = payload
         if 'pagination' in payload.keys():
             self.pagination = payload['pagination']
+
+    def _get_payload(self) -> list:
+        return self.payload

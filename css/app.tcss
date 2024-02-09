@@ -26,3 +26,7 @@ Label {
 	text-align: center;
 }
 
+Select {
+    width: 60;
+    margin: 2;
+}
