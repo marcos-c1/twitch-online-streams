@@ -12,14 +12,16 @@ Screen {
     align: center middle;
 	overflow-x: hidden;
 	overflow-y: hidden;
-	background: #9146ff
+	background: $background 58% 
 }
 
 #dt {
 	background: $background;
+    border: round $primary_color;
+	width: auto;
 	align: center middle;
 	color: $secondary_color;
-	margin: 2 2;
+	margin: 1;
 	padding: 1;
 }
 
@@ -31,22 +33,22 @@ Screen {
     margin: 2 2;
 }
 
-ListItem {
-	align-horizontal: center;
-	width: 100%;
+ScrollableContainer {
+	scrollbar-background: $background;
+	scrollbar-color: $primary_color;
+	scrollbar-color-hover: $primary_color;
+	scrollbar-color-active: $secondary_color;
+    width: 10; 
+
 }
 
-ListItem:hover {
-	background: $secondary_color;
-	color: black;
-}
-
-ListView > ListItem.--highlight {
-    background: $secondary_color; 
-}
-
-ListView:focus > ListItem.--highlight {
-    background: $secondary_color;
+#dt > .datatable--cursor{
+     border: tall transparent;
+     background: $primary_color;
+     color: $text;
+     width: 100%;
+     height: auto;
+     padding: 0 2;
 }
 
 Text {
@@ -59,9 +61,46 @@ Label {
 	padding: 2;
 }
 
+SelectCurrent {
+    border: round $primary_color;
+    background: $background;
+    color: $text;
+    width: 100%;
+    height: auto;
+    padding: 0 2;
+                                 
+    Static#label {
+        width: 1fr;
+        height: auto;
+        color: $text-disabled;
+        background: transparent;
+    }
+                                 
+    &.-has-value Static#label {
+        color: $text;
+    }
+                                 
+    .arrow {
+        box-sizing: content-box;
+        width: 1;
+        height: 1;
+        padding: 0 0 0 1;
+        color: $text-muted;
+        background: transparent;
+    }
+}
+
 Select {
-    width: 60;
-    margin: 2;
-	background: $background; 
+	max-width: 50; 
+    padding: 1;
 	color: black; 
+
+	&:focus > SelectCurrent {
+		border: round $primary_color;
+	}
+
+	&.-expanded > SelectCurrent {
+		border: round $primary_color;
+	}
+
 }

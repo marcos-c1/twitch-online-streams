@@ -12,6 +12,7 @@ from threading import Thread
 from time import sleep
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from textual_imageview.viewer import ImageView 
 
 LIST_STREAM_CHANNELS = [
     ("User", "Title", "Category", "Uptime", "Views", "Language")
@@ -50,7 +51,7 @@ class SelectCategories(Static):
         """
             Probably will solve the problem
         """
-        yield Select((category, category) for category in self.categories)
+        yield Select(((category, category) for category in self.categories), prompt="Select a category")
 
 class DataList(Static):
 
@@ -131,12 +132,18 @@ class StreamApp(App):
                 "thumbnail_url"
             """
             #datetime_str = '09/19/22T13:55:26Z'
-            now_utc = datetime.now(ZoneInfo('UTC')).replace(tzinfo=None)
-            started_at = datetime.strptime(ch.started_at, "%Y-%m-%dT%H:%M:%SZ")
-            diff = (now_utc - started_at)
-            diff_str = ''.join(str(diff)).split('.')[0]
-            CHANNEL = (ch.user_name, ch.title, ch.game_name, diff_str, ch.viewer_count, ch.language)
+            diff_str = self.convert_utc_to_uptime(ch.started_at) 
+            title = ch.title[:50] + '...' if len(ch.title) > 50 else ch.title
+            #link_name = f'[link=https://www.twitch.tv/{ch.user_name}]{ch.user_name}[/link]'
+            CHANNEL = (ch.user_name, title, ch.game_name, diff_str, ch.viewer_count, ch.language)
             LIST_STREAM_CHANNELS.append(CHANNEL)
+
+    def convert_utc_to_uptime(self, utc: str) -> str:
+        now_utc = datetime.now(ZoneInfo('UTC')).replace(tzinfo=None)
+        started_at = datetime.strptime(utc, "%Y-%m-%dT%H:%M:%SZ")
+        diff = (now_utc - started_at)
+        diff_str = ''.join(str(diff)).split('.')[0]
+        return diff_str
 
     def compose(self) -> ComposeResult:
         """Create child widgets for the app."""
