@@ -1,3 +1,6 @@
+$primary_color: #9146ff;
+$secondary_color: #f0f0ff;
+
 StreamApp {
 	width: 100%;
 	height: 100%;
@@ -8,11 +11,21 @@ StreamApp {
 Screen {
     align: center middle;
 	overflow-x: hidden;
+	overflow-y: hidden;
+	background: #9146ff
 }
 
-ListView {
-    width: 100%;
-    height: auto;
+#dt {
+	background: $background;
+	text-align: center;
+	color: $secondary_color;
+}
+
+#dt > .datatable--header {
+	background: $background;
+}
+
+#dt > .datatable--fixed {
     margin: 2 2;
 }
 
@@ -21,12 +34,28 @@ ListItem {
 	width: 100%;
 }
 
+ListItem:hover {
+	background: $secondary_color;
+	color: black;
+}
+
+ListView > ListItem.--highlight {
+    background: $secondary_color; 
+}
+
+ListView:focus > ListItem.--highlight {
+    background: $secondary_color;
+}
+
 Label {
-    padding: 5 5;
 	text-align: center;
+	width: 100%;
+	padding: 2;
 }
 
 Select {
     width: 60;
     margin: 2;
+	background: $background; 
+	color: black; 
 }
