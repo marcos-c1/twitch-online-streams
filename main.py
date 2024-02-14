@@ -1,5 +1,6 @@
 from textual.app import App, ComposeResult
 from typing import Any, Callable, ClassVar, Generic, Iterable, NamedTuple, TypeVar, cast
+from textual import log 
 from textual.widgets import Header, Footer, Label, ListView, ListItem, Static, Select, Log, DataTable
 from textual.containers import Horizontal, Vertical, ScrollableContainer
 from textual.binding import Binding, BindingType
@@ -44,10 +45,6 @@ class SelectCategories(Static):
         for row in LIST_STREAM_CHANNELS:
             self.categories.add(row[2])
 
-    @on(Select.Changed)
-    def select_changed(self, event: Select.Changed) -> None:
-        self.title = str(event.value)
-
     def compose(self) -> ComposeResult:
         # TODO: Use the same object as DataTable use to filter by category
         """
@@ -77,7 +74,24 @@ class DataList(Static):
         table.zebra_stripes = True
         table.add_columns(*LIST_STREAM_CHANNELS[0])
         for index, value in enumerate(LIST_STREAM_CHANNELS[1:]):
-            table.add_row(*value, height=2, key=index)
+            table.add_row(*value, height=2, key=str(index))
+
+    @on(Select.Changed)
+    def select_changed(self, event: Select.Changed) -> None:
+        self.title = str(event.value)
+        table = self.query_one(DataTable)
+        self.filter_category(table, self.title)
+        table.refresh()
+
+    def filter_category(self, table: DataTable, category: str):
+        table.clear()
+        log(category)
+        for index, value in enumerate(LIST_STREAM_CHANNELS[1:]):
+            if category == 'Select.BLANK': 
+                table.add_row(*value, height=2, key=str(index))
+            else:
+                if value[2] == category:
+                    table.add_row(*value, height=2, key=str(index))
 
     def compose(self) -> ComposeResult:
         """Create child widgets for the app."""

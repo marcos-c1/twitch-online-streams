@@ -17,8 +17,10 @@ Screen {
 
 #dt {
 	background: $background;
-	text-align: center;
+	align: center middle;
 	color: $secondary_color;
+	margin: 2 2;
+	padding: 1;
 }
 
 #dt > .datatable--header {
@@ -45,6 +47,10 @@ ListView > ListItem.--highlight {
 
 ListView:focus > ListItem.--highlight {
     background: $secondary_color;
+}
+
+Text {
+	text-align: center;
 }
 
 Label {
