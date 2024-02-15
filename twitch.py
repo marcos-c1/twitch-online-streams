@@ -27,10 +27,32 @@ class TwitchAPI():
     def validate_token(self):
         self.token.is_valid_token()
         
+    # GET 'https://id.twitch.tv/oauth2/validate'
+    def get_current_user_id(self) -> str:
+        """
+            Example of response
+            {
+              "client_id": "wbmytr93xzw8zbg0p1izqyzzc5mbiz",
+              "login": "twitchdev",
+              "scopes": [
+                "channel:read:subscriptions"
+              ],
+              "user_id": "141981764",
+              "expires_in": 5520838
+            }
+                                                                                             
+        """
+        response = self.token.get_user_id_by_token()
+        return response['user_id']
+        
     # GET https://api.twitch.tv/helix/users?login=<username>
     # GET 'https://api.twitch.tv/helix/users?id=141981764'
-    def get_user(self, login: str):
-        url = self.root_url + f'users?login={login}'
+    def get_user(self, user_id: str):
+        url = ""
+        if user_id:
+            url = self.root_url + f'users?id={user_id}'
+        else:
+            raise Exception("No user_id parameter passed to get_user endpoint")
         
         """
             Example of request
@@ -84,10 +106,10 @@ class TwitchAPI():
                 raise Exception(f"{response.status_code}: {response.content}")
         return None
 
-    def get_followed_channels_live(self, login: str):
+    def get_followed_channels_live(self, user_id: str):
         client_id = self.client_id
         user_controller = UserController()
-        user = user_controller.get_user(login)
+        user = user_controller.get_user(user_id)
 
         url = self.root_url + 'streams/followed' + f'?user_id={user.id}'
         

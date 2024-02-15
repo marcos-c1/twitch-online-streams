@@ -8,6 +8,8 @@ from textual.binding import Binding, BindingType
 from textual import on
 from textual.reactive import reactive
 from controllers.channel_controller import ChannelController 
+from controllers.user_controller import UserController
+from models.user import User
 from rich.text import Text, TextType
 from threading import Thread
 from time import sleep
@@ -45,18 +47,21 @@ class SelectCategories(Static):
 
     def __init__(self) -> None:
         super().__init__()
+        self.user = self.__get_user()
         for row in LIST_STREAM_CHANNELS[1:]:
             self.categories.add(row[2])
 
+    def __get_user(self) -> User:
+        user_controller = UserController() 
+        user_id = user_controller.get_current_user_id()
+        user = user_controller.get_user(user_id)
+        return user 
+
     def compose(self) -> ComposeResult:
-        # TODO: Use the same object as DataTable use to filter by category
-        """
-            Probably will solve the problem
-        """
         yield Select(((category, category) for category in self.categories), prompt="Select a category")
+        yield Label(f"{self.user.display_name}")
 
 class DataList(Static):
-
 
     BINDINGS: list[BindingType] = [
         Binding("enter", "select_cursor", "Select", show=False),
@@ -135,7 +140,8 @@ class StreamApp(App):
 
     def __init__(self) -> None:
         super().__init__()
-        streams = self._get_followed_channels() 
+        user_id = self._get_user_id()
+        streams = self._get_followed_channels(user_id) 
                                                                                                           
         for ch in streams:
             """
@@ -179,10 +185,15 @@ class StreamApp(App):
         """An action to toggle dark mode."""
         self.dark = not self.dark
 
-    def _get_followed_channels(self): 
+    def _get_followed_channels(self, user: str): 
         ch_controller = ChannelController()
-        channels = ch_controller.get_followed_channels('rvlt1')
+        channels = ch_controller.get_followed_channels(user)
         return channels
+
+    def _get_user_id(self) -> str:
+        user_controller = UserController()
+        user_id = user_controller.get_current_user_id()
+        return user_id
 
 if __name__ == "__main__":
     app = StreamApp()
