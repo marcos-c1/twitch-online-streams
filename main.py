@@ -1,7 +1,8 @@
 from textual.app import App, ComposeResult
+from PIL import Image
 from typing import Any, Callable, ClassVar, Generic, Iterable, NamedTuple, TypeVar, cast
 from textual import log 
-from textual.widgets import Header, Footer, Label, ListView, ListItem, Static, Select, Log, DataTable
+from textual.widgets import Header, Footer, Label, ListView, ListItem, Static, Select, Log, DataTable, TabbedContent, TabPane
 from textual.containers import Horizontal, Vertical, ScrollableContainer
 from textual.binding import Binding, BindingType
 from textual import on
@@ -12,12 +13,13 @@ from threading import Thread
 from time import sleep
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from textual_imageview.viewer import ImageView 
+from textual_imageview.viewer import ImageViewer 
 
 LIST_STREAM_CHANNELS = [
     ("User", "Title", "Category", "Uptime", "Views", "Language")
 ]
 LIST_STREAM_CATEGORIES = []
+LIST_STREAM_ITEMS = []
 DICT_STREAM = [] 
 
 """
@@ -43,7 +45,7 @@ class SelectCategories(Static):
 
     def __init__(self) -> None:
         super().__init__()
-        for row in LIST_STREAM_CHANNELS:
+        for row in LIST_STREAM_CHANNELS[1:]:
             self.categories.add(row[2])
 
     def compose(self) -> ComposeResult:
@@ -54,6 +56,7 @@ class SelectCategories(Static):
         yield Select(((category, category) for category in self.categories), prompt="Select a category")
 
 class DataList(Static):
+
 
     BINDINGS: list[BindingType] = [
         Binding("enter", "select_cursor", "Select", show=False),
@@ -81,12 +84,13 @@ class DataList(Static):
     def select_changed(self, event: Select.Changed) -> None:
         self.title = str(event.value)
         table = self.query_one(DataTable)
+        list_view = self.query_one(ListView)
         self.filter_category(table, self.title)
+        self.filter_category_lv(list_view, self.title)
         table.refresh()
 
     def filter_category(self, table: DataTable, category: str):
         table.clear()
-        log(category)
         for index, value in enumerate(LIST_STREAM_CHANNELS[1:]):
             if category == 'Select.BLANK': 
                 table.add_row(*value, height=2, key=str(index))
@@ -94,12 +98,30 @@ class DataList(Static):
                 if value[2] == category:
                     table.add_row(*value, height=2, key=str(index))
 
+    def filter_category_lv(self, list_view: ListView, category: str):
+        list_view.clear()
+        for i in range(1, len(LIST_STREAM_CHANNELS)):
+            row = LIST_STREAM_CHANNELS[i]
+            ITEM = ListItem(Label(f"{row[0]}\n{row[1]}\n{row[2]}\n{row[3]}\n{row[4]}\n{row[5]}"))
+            if category == 'Select.BLANK':
+                list_view.append(ITEM)
+            else:
+                if LIST_STREAM_CHANNELS[i][2] == category:
+                    list_view.append(ITEM)
+        
     def compose(self) -> ComposeResult:
         """Create child widgets for the app."""
+        img = Image.open('./imgs/twitch-logo.png')
         yield SelectCategories() 
-        yield DataTable(
-            id='dt',
-        )
+        with TabbedContent(initial="dt-tab"):
+            with TabPane("Table", id="dt-tab"):  # First tab
+                yield DataTable(
+                    id='dt',
+                )
+            with TabPane("List", id="list-tab"):
+                yield ListView(
+                        *LIST_STREAM_ITEMS,
+                )
 
 class StreamApp(App):
     """A Textual app to manage stopwatches."""
@@ -136,7 +158,9 @@ class StreamApp(App):
             title = ch.title[:50] + '...' if len(ch.title) > 50 else ch.title
             #link_name = f'[link=https://www.twitch.tv/{ch.user_name}]{ch.user_name}[/link]'
             CHANNEL = (ch.user_name, title, ch.game_name, diff_str, ch.viewer_count, ch.language)
+            ITEM = ListItem(Label(f"{ch.user_name}\n{title}\n{ch.game_name}\n{diff_str}\n{ch.viewer_count}\n{ch.language}"))
             LIST_STREAM_CHANNELS.append(CHANNEL)
+            LIST_STREAM_ITEMS.append(ITEM)
 
     def convert_utc_to_uptime(self, utc: str) -> str:
         now_utc = datetime.now(ZoneInfo('UTC')).replace(tzinfo=None)

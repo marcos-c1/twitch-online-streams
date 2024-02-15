@@ -2,25 +2,43 @@ $primary_color: #9146ff;
 $secondary_color: #f0f0ff;
 
 StreamApp {
-	width: 100%;
-	height: 100%;
-	margin: 4 8;
 	text-style: bold;
 }
 
 Screen {
-    align: center middle;
+	width: 100%;
+	height: 100%;
 	overflow-x: hidden;
-	overflow-y: hidden;
 	background: $background 58% 
+}
+
+#list-tab {
+	width: auto;
+}
+
+ListItem {
+	border: round $primary_color;
+	background: transparent;
+}
+
+.card {
+    border: round $primary_color; 
+	padding: 1 1;
+}
+
+ImageViewer{
+    min-width: 1;
+    min-height: 1;
 }
 
 #dt {
 	background: $background;
+	text-align: center;
     border: round $primary_color;
 	width: auto;
-	align: center middle;
 	color: $secondary_color;
+	row-span: 3;
+	column-span: 1;
 	margin: 1;
 	padding: 1;
 }
@@ -38,8 +56,6 @@ ScrollableContainer {
 	scrollbar-color: $primary_color;
 	scrollbar-color-hover: $primary_color;
 	scrollbar-color-active: $secondary_color;
-    width: 10; 
-
 }
 
 #dt > .datatable--cursor{
@@ -103,4 +119,18 @@ Select {
 		border: round $primary_color;
 	}
 
+}
+
+SelectOverlay {
+    border: round $background;
+    background: $panel;
+    color: $text;
+    width: 100%;
+    padding: 0 1;
+}
+SelectOverlay:focus {
+    border: tall $background;
+}
+SelectOverlay > .option-list--option {
+    padding: 0 1;
 }
