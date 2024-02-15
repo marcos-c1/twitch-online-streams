@@ -2,8 +2,8 @@ from textual.app import App, ComposeResult
 from PIL import Image
 from typing import Any, Callable, ClassVar, Generic, Iterable, NamedTuple, TypeVar, cast
 from textual import log 
-from textual.widgets import Header, Footer, Label, ListView, ListItem, Static, Select, Log, DataTable, TabbedContent, TabPane
-from textual.containers import Horizontal, Vertical, ScrollableContainer
+from textual.widgets import Header, Footer, Label, ListView, ListItem, Static, Select, Log, DataTable, TabbedContent, TabPane, Markdown
+from textual.containers import Horizontal, Vertical, ScrollableContainer, Center, Container
 from textual.binding import Binding, BindingType
 from textual import on
 from textual.reactive import reactive
@@ -21,8 +21,8 @@ LIST_STREAM_CHANNELS = [
     ("User", "Title", "Category", "Uptime", "Views", "Language")
 ]
 LIST_STREAM_CATEGORIES = []
+LIST_SCOREABOARD_VIEWS = []
 LIST_STREAM_ITEMS = []
-DICT_STREAM = [] 
 
 """
 dict keys:
@@ -58,8 +58,30 @@ class SelectCategories(Static):
         return user 
 
     def compose(self) -> ComposeResult:
-        yield Select(((category, category) for category in self.categories), prompt="Select a category")
-        yield Label(f"{self.user.display_name}")
+        with Horizontal(id="header"):
+            yield Select(((category, category) for category in self.categories), prompt="Select a category")
+            yield Label(f"{self.user.display_name}", id="user_id")
+
+EXAMPLE_MARKDOWN = """\
+# Markdown Document
+
+This is an example of Textual's `Markdown` widget.
+
+## Features
+
+Markdown syntax and extensions are supported.
+
+- Typography *emphasis*, **strong**, `inline code` etc.
+- Headers
+- Lists (bullet and ordered)
+    1. Example
+- Syntax highlighted code blocks
+- Tables!
+"""
+
+class MarkdownViews(Static):
+    def compose(self) -> ComposeResult:
+        yield Markdown(EXAMPLE_MARKDOWN)
 
 class DataList(Static):
 
@@ -120,9 +142,11 @@ class DataList(Static):
         yield SelectCategories() 
         with TabbedContent(initial="dt-tab"):
             with TabPane("Table", id="dt-tab"):  # First tab
-                yield DataTable(
-                    id='dt',
-                )
+                with Horizontal(id="dt-container"):
+                    yield DataTable(
+                        id='dt',
+                    )
+                    yield MarkdownViews()
             with TabPane("List", id="list-tab"):
                 yield ListView(
                         *LIST_STREAM_ITEMS,
@@ -165,7 +189,9 @@ class StreamApp(App):
             #link_name = f'[link=https://www.twitch.tv/{ch.user_name}]{ch.user_name}[/link]'
             CHANNEL = (ch.user_name, title, ch.game_name, diff_str, ch.viewer_count, ch.language)
             ITEM = ListItem(Label(f"{ch.user_name}\n{title}\n{ch.game_name}\n{diff_str}\n{ch.viewer_count}\n{ch.language}"))
+            VIEWS = (ch.user_name, ch.viewer_count)
             LIST_STREAM_CHANNELS.append(CHANNEL)
+            LIST_SCOREABOARD_VIEWS.append(VIEWS)
             LIST_STREAM_ITEMS.append(ITEM)
 
     def convert_utc_to_uptime(self, utc: str) -> str:

@@ -31,14 +31,15 @@ ImageViewer{
     min-height: 1;
 }
 
+#dt-container {
+}
+
 #dt {
 	background: $background;
 	text-align: center;
     border: round $primary_color;
 	width: auto;
 	color: $secondary_color;
-	row-span: 3;
-	column-span: 1;
 	margin: 1;
 	padding: 1;
 }
@@ -69,6 +70,16 @@ ScrollableContainer {
 
 Text {
 	text-align: center;
+}
+
+#header {
+	align-horizontal: center;
+	height: 5;
+}
+
+#user_id {
+	text-align: end;
+	width: auto;
 }
 
 Label {
